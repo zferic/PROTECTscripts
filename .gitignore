@@ -39,4 +39,4 @@ Thumbs.db
 
 # Temporary files   #
 #####################
-.swp
+*.swp
