@@ -40,3 +40,7 @@ Thumbs.db
 # Temporary files   #
 #####################
 *.swp
+
+# Test files        #
+#####################
+*.csv
