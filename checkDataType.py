@@ -47,7 +47,7 @@ for content in fn_sql.readlines():
       print_type = "integer"
     if sql_type == "DATE":
       print_type = "date"
-    if sql_type == "DATETIME":
+    if sql_type == "TIME":
       print_type = "time"
     if sql_type == "DECIMAL":
       print_type = "decimal"

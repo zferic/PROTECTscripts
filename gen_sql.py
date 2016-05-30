@@ -3,7 +3,7 @@
 #
 #  csv2xsd.py
 #  4/1/2015
-#  Copyright 2015 leiming <ylm@ece.neu.edu>
+#  Copyright 2015 leiming <ylm@ece.neu.edu> shidong <shidong@ece.neu.edu>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -73,8 +73,9 @@ Template_Constraint = \
 "CONSTRAINT tablename_fieldname_CK CHECK (conditions),\n"
 
 # regular expression needed
+regex_char_limit = re.compile(r"(\d+) [cC]haracters")
 regex_branch_logic = re.compile(r"\[(\w+)\]\s?=\s?'(\d+)'")
-regex_decimal = re.compile(r"\d+.\d+")
+regex_decimal = re.compile(r"\d+\.\d+")
 
 # the first column is the data field
 # to generate the xml format, we need to know
@@ -93,8 +94,12 @@ def GenTemplate(info):
   field_valid    = info[7]
   field_min      = info[8]
   field_max      = info[9]
+  field_branch   = info[11]
   minv = field_min.strip()                                                      
   maxv = field_max.strip()
+
+  # target table name
+  target_table = info[1]
 
   # (1) change to upper case
   field_name = field_name.strip().upper()
@@ -103,12 +108,14 @@ def GenTemplate(info):
   FType = ""
 
   # Find the char limit
-  char_limit = re.search(r"(\d+) [cC]haracters", field_note)    
+  char_limit = ""
+  if regex_char_limit.match(field_note):
+    char_limit = regex_char_limit.match(field_note).group(1)
   if(field_type == 'notes'):
     if char_limit:
-      FType = "VARCHAR(" + char_limit + ")"
+      FType = "NVARCHAR(" + char_limit + ")"
     else:
-      FType = "VARCHAR(200)"
+      FType = "NVARCHAR(200)"
 
   if(field_type == 'radio' or field_type == 'checkbox'):
     FType = "INT"
@@ -124,7 +131,7 @@ def GenTemplate(info):
     index_int = field_valid.find('integer')
 
     # number
-    index_number = field_valid.('number')
+    index_number = field_valid.find('number')
 
     # string
     n = 0
@@ -154,41 +161,46 @@ def GenTemplate(info):
 
     else:
       if char_limit:
-        FType = "VARCHAR(" + char_limit + ")"
+        FType = "NVARCHAR(" + char_limit + ")"
       else:
-        FType = "VARCHAR(200)"
-
+        FType = "NVARCHAR(200)"
 
 
   # (3) case 1, field_choices contains options that are separated by '|'
   #     case 2, field_min and field_max have values,
   #             which excludes the time format hh:mm
   #     case 3, branch logic exits
-  Need_Check = "no"
+  need_check = False
+  need_check_choice = False
+  need_check_range = False
+  need_check_logic = False
 
   # case 1
   # check "|" symbol
   sym_index = field_choices.find("|")
 
   if sym_index > -1:
-    Need_Check = "yes"
+    need_check = True
+    need_check_choice = True
 
   # case 2
   # min and max not empty
-  if minv or maxv :
-    column_1 = minv.find(":")
-    column_2 = maxv.find(":")
-    # exclude the time case
-    if (column_1 == -1) and (column_2 == -1):
-      Need_Check = "yes"
+  if (minv or maxv) and index_date == -1 and index_time == -1 :
+    need_check = True
+    need_check_range = True
 
+  # case 3
+  # Branch logic exits
+  if regex_branch_logic.match(field_branch):
+    need_check = True
+    need_check_logic = True
 
   #
-  # (4) define the condition string
+  # (4) generate the choice string
   #
-
+  choicestr = ""
   # extract the integers
-  if sym_index > -1:
+  if need_check_choice:
     #integer list
     list_int = []
 
@@ -205,24 +217,47 @@ def GenTemplate(info):
       pipe_int = pipe_int + items + ","
     # remove the last symbol ","
     pipe_int = pipe_int[:-1]
-
-    # produce the condition string
-    condstr = field_name + " IN ("+ pipe_int+")"
-
+    choicestr = field_name + " IN (" + pipe_int + ")"
 
   #
-  # (5) format the output string
+  # (5) generate the range string
   #
-  if Need_Check == "no":
+  rangestr = ""
+  if need_check_range:
+    rangestr = field_name + " between " + minv + " and " + maxv
+
+  #
+  # (6) produce the overall condition string
+  #
+  if need_check_logic: 
+    fieldstr = regex_branch_logic.match(field_branch).group(1).upper() 
+    fieldvalue = regex_branch_logic.match(field_branch).group(2)
+    condstr = "(" + fieldstr + "=" + fieldvalue            
+    if choicestr:
+      condstr += " AND " + "(" + choicestr + ")"
+    if rangestr:
+      condstr += " AND " + "(" + rangestr + ")"
+    condstr += ") OR (" + fieldstr + "<>" + fieldvalue + " AND " + \
+               fieldstr + " = NULL )"
+  else:
+    if choicestr and rangestr:
+      condstr = "(" + choicestr + ")" + " AND " + "(" + rangestr + ")"
+    elif choicestr:
+      condstr = choicestr
+    elif rangestr:
+      condstr = rangestr
+  #
+  # (7) format the output string
+  #
+  if not need_check:
     format_string = Template_No_Constraint.replace('name', field_name)
     format_string = format_string.replace('type', FType)
     format_string = format_string.replace('null_str', null_str)
 
-  if Need_Check == "yes":
+  if need_check:
     format_string = Template_Constraint.replace('fieldname', field_name)
     format_string = format_string.replace('type', FType)
     format_string = format_string.replace('null_str', null_str)
-
     format_string = format_string.replace('tablename', target_table.upper())
     # replace the conditions
     format_string = format_string.replace('conditions', condstr)
@@ -234,13 +269,6 @@ usage_str = "Usage: ./[script name] [path to data dictionary csv] \
 
 def main():
 
-  # check the arguments
-  # print 'Number of arguments:', len(sys.argv), 'arguments.'
-  print "program name : ", sys.argv[0]
-  print "csv file : ", sys.argv[1]
-  print "target table : ", sys.argv[2], "This has to be correct"
-  print "Start program."
-
   if len(sys.argv) < 3:
     print "Too few arguments"
     print "Please specify the csv file and target."
@@ -251,6 +279,13 @@ def main():
     print "Too many. Read one csv file at at time."
     print usage_str
     sys.exit()
+
+  # check the arguments
+  # print 'Number of arguments:', len(sys.argv), 'arguments.'
+  print "program name : ", sys.argv[0]
+  print "csv file : ", sys.argv[1]
+  print "target table : ", sys.argv[2], "This has to be correct"
+  print "Start program."
 
   filename = sys.argv[1]
   target_table = sys.argv[2]
@@ -272,13 +307,16 @@ def main():
 
       # output the row_temp to the text file
       o_file.write(row_temp)
+      o_file.write("\n")
 
   # close output file
   o_file.close()
 
   #
   print "End program.\n",\
-    "The decimal case is not considered here.\n",\
+    "The decimal cases are only handled when there are obvious "\
+    "decimal number in the data dictionary.\n"\
+    "Most of the case are not considered here.\n",\
     "You still need to manually fix the output."
 
   return 0
