@@ -264,8 +264,8 @@ def GenTemplate(info):
 
   return format_string
 
-usage_str = "Usage: ./[script name] [path to data dictionary csv] \
-            [target table]"
+usage_str = "Usage: ./[script name] [path to data dictionary csv] " \
+            "[target table]"
 
 def main():
 
