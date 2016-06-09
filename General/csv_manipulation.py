@@ -63,21 +63,31 @@ def Update(original_csv_file, ref_csv_file):
   reffile = csv.reader(open(ref_csv_file, "rb"))
   updatedfile = csv.writer(open("updated_dd.csv", "wb"))
 
-  print "WARNING: The program should change as reference csv file format" \
-        "changes"
+  print "WARNING: The header-mapping table should be changed as reference csv " \
+        "file format changes"
 
+  #Create a header map between reference csv and original csv
+  originalheader = next(originalfile)
+  updatedfile.writerow(originalheader)
+  refheader = next(reffile)
+  # Eliminate the first field of reference csv
+  refheader = refheader[1:]
+  headermap = []
+  for header in refheader:
+    headermap.append(originalheader.index(header));
+
+  # Recorde each row in the reference csv
   list_ref = []
   for row in reffile:
     list_ref.append(row)
   # Populate new updated csv file
   for row in originalfile:
-    rowstr = row
     for row_ref in list_ref:
       if row_ref[0] == row[0]:
         for idx in range(1, len(row_ref)):
-          rowstr[idx+1] = row_ref[idx]
+          row[headermap[idx-1]] = row_ref[idx]
         break
-    updatedfile.writerow(rowstr)
+    updatedfile.writerow(row)
 
 
 usage_str = "./[path to scripts] extract [path to csv file] [targe table]\n" \
