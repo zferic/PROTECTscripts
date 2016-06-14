@@ -99,6 +99,7 @@ def main():
   for i in range(len(dd_field_list)):
     if dd_field_list[i] != ed_field_list[i]:
       print "Inconsistent order of : " + dd_field_list[i]
+      print "Should be : " + ed_field_list[i]
 
   # Program ends
   print "Program ends."

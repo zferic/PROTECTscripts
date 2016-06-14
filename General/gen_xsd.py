@@ -131,7 +131,7 @@ indent_p2 + "<xs:element name=\"_elename_\" type=\"xs:integer\" nillable=\"true\
 indent_p2 + "</xs:element>\n"
 
 Format_Int_Range = \
-indent_p2 + "<xs:element name=\"_elename_\">\n" + \
+indent_p2 + "<xs:element name=\"_elename_\" nillable=\"true\">\n" + \
 indent_p2 + "\t<xs:simpleType>\n" + \
 indent_p2 + "\t\t<xs:restriction base=\"xs:integer\">\n" + \
 indent_p2 + "\t\t\t<xs:minInclusive value=\"_min_\"/>\n" + \
@@ -257,14 +257,20 @@ def GenDefInfo(info):
     elif index_number > -1:
       n = 4
 
+    
+    field_min = field_min.strip()
+    field_max = field_max.strip()
+    regex_decimal = re.compile(r"\d+\.\d*")
+    if n == 4:
+      if not (regex_decimal.match(field_min) and regex_decimal.match(field_max)):
+        n = 3
+
     if n == 1:
       format_string = Format_Date.replace('_elename_', field_name)
     elif n == 2:
       format_string = Format_Time.replace('_elename_', field_name)
     elif n == 3:
       # integer list, check min and max
-      field_min = field_min.strip()
-      field_max = field_max.strip()
       if len(field_min) == 0 and len(field_max) == 0:
         format_string = Format_Int_Simple.replace('_elename_', field_name)
 
