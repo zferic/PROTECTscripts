@@ -319,7 +319,8 @@ def GenDefInfo(info):
   return format_string
 
 
-usage_string = "[Usage] ./[script_name] [dd csv file] [target table]\n"
+usage_string = "[Usage] ./[script_name] [dd csv file] [target table] [command]\n"\
+               "The [command] is optional and has two choice 1) map 2) def"
 
 def main():
 
@@ -328,28 +329,33 @@ def main():
     print usage_string
     sys.exit()
 
-  if len(sys.argv) > 3:
+  if len(sys.argv) > 4:
     print "Too many. Read one csv file at at time."
     print usage_string
     sys.exit()
+
+  command = ""
+  if len(sys.argv) == 4:
+    command = sys.argv[3]
 
   # check the arguments
   # print 'Number of arguments:', len(sys.argv), 'arguments.'
   print "program name : ", sys.argv[0]
   print "csv dd file : ", sys.argv[1]
   print "target table : ", sys.argv[2]
+  if command:
+    print "command : ", command
   print "Start program."
 
 
   filename = sys.argv[1]
   target_table = sys.argv[2]
-  #print filename
 
   # read csv file
   file = csv.reader(open(filename, "rb"));
 
   # open text file to write
-  o_fname = target_table + ".xsd"
+  o_fname = target_table + command + ".xsd"
   o_file = open(o_fname, "w")
 
   # look at the second column, find the right table to work on
@@ -366,20 +372,29 @@ def main():
       definition_info += GenDefInfo(row)
 
   # output the string
-  start_string_modified = start_string.replace("target_table", target_table)
-  o_file.write(start_string_modified)
-  o_file.write(mapping_info)
-  o_file.write(intermediate_string)
-  o_file.write(definition_info)
-  o_file.write(end_string)
+  if not command:
+    start_string_modified = start_string.replace("target_table", target_table)
+    o_file.write(start_string_modified)
+    o_file.write(mapping_info)
+    o_file.write(intermediate_string)
+    o_file.write(definition_info)
+    o_file.write(end_string)
+  else:
+    if command == "map":
+      o_file.write(mapping_info)
+    elif command == "def":
+      o_file.write(definition_info)
+    else:
+      print "Illigel command: ", command
+      sys.exit()
 
   # close output file
   o_file.close()
 
   #
   print "End program.\n",\
-    "The decimal case is not considered here.\n",\
-    "You still need to manually fix the output."
+    "The decimal case is only partially considered here.\n",\
+    "You still need to manually fix some output."
 
   return 0
 
