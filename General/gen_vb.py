@@ -87,7 +87,7 @@ Template_CustomCheck1 = \
 "\t\tEnd If\n"\
 "\n"\
 "\t\tIf .Item(\"_condition\") = _value Then\n"\
-"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"field\"), EddErrors.CustomError_cond_no)\n"\
+"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElseIf .Item(\"_condition\") <> _value And q = 99999 Then\n"\
 "\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElse\n"\
@@ -123,7 +123,7 @@ Template_CustomCheck2 = \
 "\t\tEnd If\n"\
 "\n"\
 "\t\tIf .Item(\"_condition\") = _value And (_choice_string) Then\n"\
-"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"field\"), EddErrors.CustomError_cond_no)\n"\
+"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElseIf .Item(\"_condition\") <> _value And q = 99999 Then\n"\
 "\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElse\n"\
@@ -136,7 +136,7 @@ Template_GridEvents_Case = \
 "Case \"_condition\"\n"\
 
 Template_GridEvents_Item = \
-"\tedp.AfterCellUpdate(sender, e.Cell.Row.Cells.Item(\"_field\")\n)"
+"\tedp.AfterCellUpdate(sender, e.Cell.Row.Cells.Item(\"_field\"))\n"
 
 # regular expression needed
 regex_branch_logic = re.compile(r"\[(\w+)\]\s?=\s?'(\d+)'")
@@ -200,7 +200,7 @@ class ConditionInfo:
 # Some global data dictionary needed
 condition_info_dict = collections.OrderedDict()
  
-condition_number = 0
+condition_number = 1
 def GenConditionInfo(info):
 
   ## extract related fields
@@ -341,7 +341,7 @@ def main():
       GenConditionInfo(row)
 
   # Generate error msg string
-  error_no = 0
+  error_no = 1
   for key in condition_info_dict:
     condition = key
     condition_info = condition_info_dict[key]
