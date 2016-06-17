@@ -51,11 +51,11 @@ import collections
 target_table = ""
 
 Template_ErrorMsg1 = \
-"Case EddErrors.CustomError_error_no\n"\
+"Case EddErrors.CustomError_cond_no\n"\
 "\tReturn \"If _condition is not _value, this must be NULL.\"\n"
 
 Template_ErrorMsg2 = \
-"Case EddErrors.CustomError_error_no\n"\
+"Case EddErrors.CustomError_cond_no\n"\
 "\tReturn \"Possible Error 1) Must be NULL if _condition is not _value "\
 "2) Content is not an valid option.\"\n"
 
@@ -87,11 +87,11 @@ Template_CustomCheck1 = \
 "\t\tEnd If\n"\
 "\n"\
 "\t\tIf .Item(\"_condition\") = _value Then\n"\
-"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"field\"), EddErrors.CustomError_error_no)\n"\
+"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElseIf .Item(\"_condition\") <> _value And q = 99999 Then\n"\
-"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_error_no)\n"\
+"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElse\n"\
-"\t\t\tMe.AddError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_error_no)\n"\
+"\t\t\tMe.AddError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tEnd If\n"\
 "\tEnd With\n"\
 "End Sub\n"\
@@ -123,37 +123,34 @@ Template_CustomCheck2 = \
 "\t\tEnd If\n"\
 "\n"\
 "\t\tIf .Item(\"_condition\") = _value And (_choice_string) Then\n"\
-"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"field\"), EddErrors.CustomError_error_no)\n"\
+"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElseIf .Item(\"_condition\") <> _value And q = 99999 Then\n"\
-"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_error_no)\n"\
+"\t\t\tMe.RemoveError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tElse\n"\
-"\t\t\tMe.AddError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_error_no)\n"\
+"\t\t\tMe.AddError(e.Row, e.Row.Table.Columns.Item(\"_field\"), EddErrors.CustomError_cond_no)\n"\
 "\t\tEnd If\n"\
 "\tEnd With\n"\
 "End Sub\n"\
 
 Template_GridEvents_Case = \
-"Case \"condition\"\n"\
+"Case \"_condition\"\n"\
 
 Template_GridEvents_Item = \
-"\tedp.AfterCellUpdate(sender, e.Cell.Row.Cells.Item(\"field\")\n)"
+"\tedp.AfterCellUpdate(sender, e.Cell.Row.Cells.Item(\"_field\")\n)"
 
 # regular expression needed
 regex_branch_logic = re.compile(r"\[(\w+)\]\s?=\s?'(\d+)'")
 
-# Some data dictionary needed
-condition_field_dict = collections.OrderedDict()
-
 # Function of generating error message type 1
-def GenErrorMsg1(error_no, condition, value):
-  format_string = Template_ErrorMsg1.replace("_error_no", error_no).\
+def GenErrorMsg1(cond_no, condition, value):
+  format_string = Template_ErrorMsg1.replace("_cond_no", cond_no).\
                   replace("_condition", condition).\
                   replace("_value", value)
   return format_string
 
 # Function of generating error message type 2
-def GenErrorMsg1(error_no, condition, value):
-  format_string = Template_ErrorMsg2.replace("_error_no", error_no).\
+def GenErrorMsg2(cond_no, condition, value):
+  format_string = Template_ErrorMsg2.replace("_cond_no", cond_no).\
                   replace("_condition", condition).\
                   replace("_value", value)
   return format_string
@@ -162,38 +159,49 @@ def GenErrorMsg1(error_no, condition, value):
 def GenCheckFunc(error_no, condition, field):
   format_string = Template_CheckFunc.replace("_error_no", error_no).\
                   replace("_condition", condition).\
-                  replace("_field", filed)
+                  replace("_field", field)
   return format_string
 
 # Function of generating custom check type 1
-def GenCustomCheck1(error_no, condition, field, value):
+def GenCustomCheck1(error_no, cond_no, condition, field, value):
   format_string = Template_CustomCheck1.replace("_error_no", error_no).\
+                  replace("_cond_no", cond_no).\
                   replace("_condition", condition).\
                   replace("_field", field).\
                   replace("_value", value)
   return format_string
 
-def GenCustomCheck2(error_no, condition, field, value):
+def GenCustomCheck2(error_no, cond_no, condition, field, value):
   format_string = Template_CustomCheck2.replace("_error_no", error_no).\
+                  replace("_cond_no", cond_no).\
                   replace("_condition", condition).\
                   replace("_field", field).\
                   replace("_value", value)
   return format_string
 
 #Function of generating grid event case
-def GenGridEventCase(condition, field):
-  format_string = Template_GridEvents_Case.replace("_condition", condition).\
-                  replace("_field", field).\
+def GenGridEventCase(condition):
+  format_string = Template_GridEvents_Case.replace("_condition", condition)
   return format_string
 
 #Function of generating grid event item
-def GenGridEventItem(condition, field):
-  format_string = Template_GridEvents_Item.replace("_condition", condition).\
-                  replace("_field", field).\
+def GenGridEventItem(field):
+  format_string = Template_GridEvents_Item.replace("_field", field)
   return format_string
 
-def genVbTemplate(info, part)
-  format_string = ""
+# Condition information class
+class ConditionInfo:
+  def __init__(self, number, field, value, choice_included):
+    self.number = number
+    self.field = field
+    self.value = value
+    self.choice_included = choice_included
+
+# Some global data dictionary needed
+condition_info_dict = collections.OrderedDict()
+ 
+condition_number = 0
+def GenConditionInfo(info):
 
   ## extract related fields
   ## branching logic is not considered here
@@ -204,93 +212,98 @@ def genVbTemplate(info, part)
   # target table name
   target_table = info[1]
 
-  # Flags
-  choice_exist = False
-  logic_exist = False
-
   # check "|" symbol
   sym_index = field_choices.find("|")
 
-  # Branch logic exits
+  # Branch logic and choice check
+  condition = ""
+  value = -1
+  choice_list = []
+  choice_included = False
+  global condition_number
   if regex_branch_logic.match(field_branch):
-    logic_exist = True
+    # Obtain the branch logic information
+    condition = regex_branch_logic.match(field_branch).group(1)
+    value = regex_branch_logic.match(field_branch).group(2)
+
+    # Obtain the choices if there is any
     if sym_index > -1:
-      choice_exist = True
+      # extract integers out from field_choices
+      seplist = field_choices.split('|')
+      for item in seplist:
+        # extract the 1st integer in each item
+        found_int = re.search("\d+", item)
+        choice_list.append(found_int.group())
+      choice_included = True
 
-  #
-  # (4) generate the choice string
-  #
-  choicestr = ""
-  # extract the integers
-  if need_check_choice:
-    #integer list
-    list_int = []
+    # Set the condition field dictionary
+    if condition not in condition_info_dict:
+      condition_info_dict[condition] = []
+      condition_info_dict[condition].append(ConditionInfo(condition_number, \
+                                                          field_name, \
+                                                          value, \
+                                                          choice_included))
+      condition_number += 1
+    else:
+      value_list = []
+      choice_included_list = []
+      condition_info = condition_info_dict[condition]
+      for info in condition_info:
+        value_list.append(info.value)
+        choice_included_list.append(info.choice_included)
+      if value not in value_list:
+        # The value of condition is different from previous one
+        condition_info.append(ConditionInfo(condition_number, \
+                                            field_name, \
+                                            value, \
+                                            choice_included))
+        condition_number += 1
+      else:
+        # Other siutations
+        same_value_index_list = [i for i, x in enumerate(condition_info) \
+                                 if x.value == value]
 
-    # extract integers out from field_choices
-    sepintlist = field_choices.split('|')
+        # 1) no choice included in the field, the condition number should be the
+        # same as its predecessor
+        if choice_included == False:
+          # Get the condition number of its predecessor
+          previous_condition_number = condition_info[same_value_index_list[-1]].number
+          condition_info.append(ConditionInfo(previous_condition_number, \
+                                              field_name, \
+                                              value, \
+                                              choice_included))
+        # 2) There are choices included
+        else:
+          choice_included_true_exist = False
+          for i in same_value_index_list:
+            if condition_info[i].choice_included == True:
+              previous_condition_number = condition_info[i].number
+              condition_info.append(ConditionInfo(previous_condition_number, \
+                                                  field_name, \
+                                                  value, \
+                                                  choice_included))
+              choice_included_true_exist = True
+              break
+          if choice_included_true_exist == False:
+            condition_info.append(ConditionInfo(condition_number, \
+                                                field_name, \
+                                                value, \
+                                                choice_included))
+            condition_number += 1
 
-    for item in sepintlist:
-      # extract the 1st integer in each item
-      found_int = re.search("\d+", item)
-      list_int.append(found_int.group())
-
-    pipe_int = ""
-    for items in list_int:
-      pipe_int = pipe_int + items + ","
-    # remove the last symbol ","
-    pipe_int = pipe_int[:-1]
-    choicestr = field_name + " IN (" + pipe_int + ")"
-
-  #
-  # (5) generate the range string
-  #
-  rangestr = ""
-  if need_check_range:
-    rangestr = field_name + " between " + minv + " and " + maxv
-
-  #
-  # (6) produce the overall condition string
-  #
-  if need_check_logic: 
-    fieldstr = regex_branch_logic.match(field_branch).group(1).upper() 
-    fieldvalue = regex_branch_logic.match(field_branch).group(2)
-    condstr = "(" + fieldstr + "=" + fieldvalue            
-    if choicestr:
-      condstr += " AND " + "(" + choicestr + ")"
-    if rangestr:
-      condstr += " AND " + "(" + rangestr + ")"
-    condstr += ") OR (" + fieldstr + "<>" + fieldvalue + " AND " + \
-               fieldstr + " = NULL )"
-  else:
-    if choicestr and rangestr:
-      condstr = "(" + choicestr + ")" + " AND " + "(" + rangestr + ")"
-    elif choicestr:
-      condstr = choicestr
-    elif rangestr:
-      condstr = rangestr
-  #
-  # (7) format the output string
-  #
-  if not need_check:
-    format_string = Template_No_Constraint.replace('name', field_name)
-    format_string = format_string.replace('type', FType)
-    format_string = format_string.replace('null_str', null_str)
-
-  if need_check:
-    format_string = Template_Constraint.replace('fieldname', field_name)
-    format_string = format_string.replace('type', FType)
-    format_string = format_string.replace('null_str', null_str)
-    format_string = format_string.replace('tablename', target_table.upper())
-    # replace the conditions
-    format_string = format_string.replace('conditions', condstr)
-
-  return format_string
-
-
+error_msg_str = ""
+check_func_str = ""
+custom_check_str = ""
+grid_event_str = ""
 usage_str = "Usage: ./[script name] [path to data dictionary csv] " \
             "[target table]"
 
 def main():
+
+  global error_msg_str
+  global check_func_str
+  global custom_check_str
+  global grid_event_str
 
   if len(sys.argv) < 3:
     print "Too few arguments"
@@ -317,22 +330,47 @@ def main():
   file = csv.reader(open(filename, "rb"));
 
   # open text file to write
-  o_fname = "./sql_output.txt"
-  o_file = open(o_fname, "w")
+  #o_fname = "./sql_output.txt"
+  #o_file = open(o_fname, "w")
 
   # look at the second column, find the right table to work on
   # You can specify which table to work on !!!
   for row in file:
     tablename = row[1].strip()
     if tablename == target_table:
-      row_temp = GenVbTemplate(row, part)
+      GenConditionInfo(row)
 
-      # output the row_temp to the text file
-      o_file.write(row_temp)
-      o_file.write("\n")
+  # Generate error msg string
+  error_no = 0
+  for key in condition_info_dict:
+    condition = key
+    condition_info = condition_info_dict[key]
+    cond_no = -1
+    grid_event_str += GenGridEventCase(condition)
+    for info in condition_info:
+      if info.number != cond_no:
+        cond_no = info.number
+        if not info.choice_included:
+          error_msg_str += GenErrorMsg1(str(cond_no), condition, info.value)
+        else:
+          error_msg_str += GenErrorMsg2(str(cond_no), condition, info.value)
+
+      if not info.choice_included:
+        custom_check_str += GenCustomCheck1(str(error_no),\
+                                            str(info.number),\
+                                            condition, \
+                                            info.field, info.value)
+      else:
+        custom_check_str += GenCustomCheck2(str(error_no),\
+                                            str(info.number),\
+                                            condition, \
+                                            info.field, info.value)
+      check_func_str += GenCheckFunc(str(error_no), condition, info.field)
+      grid_event_str += GenGridEventItem(info.field)
+      error_no += 1
 
   # close output file
-  o_file.close()
+  #o_file.close()
 
   #
   print "End program.\n",\
@@ -342,8 +380,6 @@ def main():
     "You still need to manually fix the output."
 
   return 0
-
-
 
 if __name__ == '__main__':
   main()
