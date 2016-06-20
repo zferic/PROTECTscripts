@@ -64,6 +64,35 @@ target_table = ""
 #   checkbox->integer   :   same as radio
 #   notes->char :   always char, using char(200) as default
 
+start_string = \
+"USE PROTECT_E\n"\
+"\n"\
+"GO\n"\
+"CREATE TABLE dt_target_table\n"\
+"(\n"\
+"\n"\
+"FACILITY_ID INT NOT NULL,\n"\
+"\n"\
+"SYS_LOC_CODE NVARCHAR(20) NOT NULL,\n"\
+"\n"\
+"REDCAP_EVENT_NAME NVARCHAR(100) NULL,\n"\
+"\n"\
+
+end_string = \
+"EBATCH EBATCH NULL,\n"\
+"\n"\
+"PRIMARY KEY CLUSTERED\n"\
+"(\n"\
+"\t[FACILITY_ID] ASC,\n"\
+"\t[SYS_LOC_CODE] ASC\n"\
+"))WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF,"\
+" ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]\n"\
+") ON [PRIMARY]\n"\
+"\n"\
+"GO\n"\
+"\n"\
+"SET ANSI_PADDING OFF\n"\
+"GO\n"\
 
 Template_No_Constraint = \
 "name type null_str,\n"
@@ -294,11 +323,15 @@ def main():
   file = csv.reader(open(filename, "rb"));
 
   # open text file to write
-  o_fname = "./sql_output.txt"
+  o_fname = target_table + ".vb"
   o_file = open(o_fname, "w")
 
   # look at the second column, find the right table to work on
   # You can specify which table to work on !!!
+  global start_string
+  global end_string
+  start_string = start_string.replace("target_table", target_table)
+  o_file.write(start_string)
   for row in file:
     tablename = row[1].strip()
     if tablename == target_table:
@@ -308,6 +341,7 @@ def main():
       # output the row_temp to the text file
       o_file.write(row_temp)
       o_file.write("\n")
+  o_file.write(end_string)
 
   # close output file
   o_file.close()
