@@ -323,7 +323,7 @@ def main():
   file = csv.reader(open(filename, "rb"));
 
   # open text file to write
-  o_fname = target_table + ".vb"
+  o_fname = target_table + ".sql"
   o_file = open(o_fname, "w")
 
   # look at the second column, find the right table to work on
