@@ -368,10 +368,10 @@ def main():
   file = csv.reader(open(filename, "rb"));
 
   # open text file to write
-  error_msg_fname = "error_msg.txt"
-  check_func_fname = "check_func.txt"
-  custom_check_fname = "custom_check.txt"
-  grid_event_fname = "grid_event.txt"
+  error_msg_fname = target_table + "_error_msg.txt"
+  check_func_fname = target_table + "_check_func.txt"
+  custom_check_fname = target_table + "_custom_check.txt"
+  grid_event_fname = target_table + "_grid_event.txt"
   error_msg_file = open(error_msg_fname, "w")
   check_func_file = open(check_func_fname, "w")
   custom_check_file = open(custom_check_fname, "w")

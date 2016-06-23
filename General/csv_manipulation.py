@@ -52,6 +52,10 @@ def Extract(csv_file, target_table):
   readfile = csv.reader(open(csv_file, "rb"))
   writefile = csv.writer(open(target_table+".csv", "wb"))
 
+  # write header
+  header = next(readfile)
+  writefile.writerow(header)
+
   # Write extracted row to new csv file
   for row in readfile:
     if row[1] == target_table:
