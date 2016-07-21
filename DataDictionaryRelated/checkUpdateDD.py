@@ -38,10 +38,50 @@
 # info[12]      :   Required Field?
 # there are other fields, but not important
 
+# Items to update in current XML file
+# (1) Unnecessary field -> remove
+# (2) New field -> add
+# (3) Miss constraint -> add constraint
+# (4) Miss branch logic -> add branch logic
+
+
 import sys
+import collections
 import csv
 import re
 import xml.etree.ElementTree as ET
 
+class Field:
+  name = ""
+  form = ""
+  section = ""
+  min_value = ""
+  max_value = ""
+  branch_logic = ""
 
+  def __init__(self, name, form, section, min_value,
+               max_value, branch_logic):
+    self.name = name
+    self.form = form
+    self.section = section
+    self.min_value = min_value
+    self.max_value = max_value
+    self.branch_logic = branch_logic
+
+field_xml_list = []
+def ParseXml(xml_filename):
+
+field_dd_list = []
+def ParseDD(dd_filename):
+
+class CheckResult:
+  name = ""
+  
+
+check_results_list = []
+def CheckField():
+
+def BuildField():
+  
+def UpdateXml():
 
