@@ -56,11 +56,13 @@ fi
 # (3) Further regularize the XML format
 #     sed -i -e "s/<\(\w\+\)\/>/<\1 \/>/g" <result xml file>
 
-rm $RESULT_XML
+rm -f $RESULT_XML
 
 xmllint --encode utf8 --format temp.xml > $RESULT_XML
 
 sed -i -e "s/<\(\w\+\)\/>/<\1 \/>/g" $RESULT_XML
+
+rm temp.xml
 
 echo "Format finalize DONE"
 echo "Don't forget to manually check the difference between original xml and updated one"
