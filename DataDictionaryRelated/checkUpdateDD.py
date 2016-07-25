@@ -50,6 +50,7 @@ import collections
 import csv
 import re
 import xml.etree.ElementTree as ET
+from xml.dom.minidom import parse, parseString
 
 default_label_name = "UNLABELED"
 
@@ -69,7 +70,6 @@ class FieldXml:
 
 field_xml_dict = collections.OrderedDict()
 def ParseXml(xml_filename):
-  global field_xml_dict
   tree = ET.parse(xml_filename)
   root = tree.getroot()
   for form in root.findall("form"):
@@ -99,6 +99,7 @@ class FieldDD:
   note = ""
   constraints = ""
   branch_logic = ""
+  choice_dict = collections.OrderedDict()
 
   def __init__(self, form, section,
                data_type, label, note,
@@ -110,18 +111,18 @@ class FieldDD:
     self.note = note
     self.constraints = constraints
     self.branch_logic = branch_logic
+    self.choice_dict = {}
 
-
+regex_choice = re.compile(r"[+-]?(\d+),.*")
 field_dd_dict = collections.OrderedDict()
 def ParseDD(dd_filename):
-  global field_dd_dict
-
   # read csv file
   dd_file = csv.reader(open(dd_filename, "rb"));
   
   # Iterate through all the rows
   section_name = default_label_name
   form_name = ""
+  header = next(dd_file)
   for row in dd_file:
     field_name = row[0]
     if form_name != row[1]:
@@ -134,12 +135,25 @@ def ParseDD(dd_filename):
     note = row[6]
     minv = row[8]
     maxv = row[9]
-    field_constraints = minv + " - " + maxv
+    if minv and maxv:
+      field_constraints = minv + " - " + maxv
+    else:
+      field_constraints = ""
     field_branch_logic = row[11]
     field_dd_dict[field_name] = FieldDD(form_name, section_name,
-                                         data_type, label, note,
-                                         field_constraints,
-                                         field_branch_logic)
+                                        data_type, label, note,
+                                        field_constraints,
+                                        field_branch_logic)
+    field_choices = row[5]
+    if data_type == "radio" or data_type == "checkbox":
+      # extract integers out from field_choices
+      sepintlist = field_choices.split('|')
+
+      for item in sepintlist:
+        item = item.strip()
+        number = regex_choice.match(item).group(1)
+        content = item.replace(number+",", "")
+        field_dd_dict[field_name].choice_dict[number] = content
 
 class CheckResult:
   field_name = ""
@@ -153,13 +167,6 @@ class CheckResult:
 
 check_results_list = []
 def CheckField():
-  global check_results_list
-  global field_xml_dict
-  global field_dd_dict
-
-  print (not field_xml_dict)
-  print (not field_dd_dict)
-
   # If the two dictionary are empty, then return immdiately
   if (not field_xml_dict) or (not field_dd_dict):
     print "Haven't parse either xml or csv data dicationary"
@@ -215,25 +222,147 @@ def GenerateReport():
   #  print "Command: " + result.command
   
 
-def BuildField(field):
+def BuildField(field_name):
   # Create subelement of field
-  return
+  field = ET.Element("field")
+  fieldName = ET.SubElement(field, "fieldName")
+  fieldName.text = field_name.decode('utf-8')
+  fieldLabelSpanish = ET.SubElement(field, "fieldLabelSpanish")
+  fieldLabelEnglish = ET.SubElement(field, "fieldLabelEnglish")
+  fieldLabelSpanish.text = field_dd_dict[field_name].label.decode('utf-8')
+  fieldLabelEnglish.text = field_dd_dict[field_name].label.decode('utf-8')
+  fieldType = ET.SubElement(field, "fieldType")
+  fieldType.text = field_dd_dict[field_name].data_type.decode('utf-8')
+  fieldNoteSpanish = ET.SubElement(field, "fieldNoteSpanish")
+  fieldNoteEnglish = ET.SubElement(field, "fieldNoteEnglish")
+  if field_dd_dict[field_name].note:
+    fieldNoteSpanish.text = field_dd_dict[field_name].note.decode('utf-8')
+    fieldNoteEnglish.text = field_dd_dict[field_name].note.decode('utf-8')
+  fieldConstraints = ET.SubElement(field, "fieldConstraints")
+  if field_dd_dict[field_name].constraints:
+    fieldConstraints.text = field_dd_dict[field_name].constraints.decode('utf-8')
+  fieldBranchLogic = ET.SubElement(field, "fieldBranchingLogic")
+  if field_dd_dict[field_name].branch_logic:
+    fieldBranchLogic.text = field_dd_dict[field_name].branch_logic.decode('utf-8')
+  if fieldType.text == "radio" or fieldType.text == "checkbox":
+    fieldValues = ET.SubElement(field, "fieldValues")
+    for choice_value in field_dd_dict[field_name].choice_dict:
+      fieldData = ET.SubElement(fieldValues, "fieldData")
+      fieldValue = ET.SubElement(fieldData, "fieldValue")
+      fieldValue.text = choice_value.decode('utf-8')
+      fieldValueLabelEnglish = ET.SubElement(fieldData, "fieldValueLabelEnglish")
+      fieldValueLabelEnglish.text = \
+        field_dd_dict[field_name].choice_dict[choice_value].decode('utf-8')
+      fieldValueLabelSpanish = ET.SubElement(fieldData, "fieldValueLabelSpanish")
+      fieldValueLabelSpanish.text = \
+        field_dd_dict[field_name].choice_dict[choice_value].decode('utf-8')
+
+  return field
  
-def UpdateXml():
-  return
+def UpdateXml(xml_filename, output_xml_filename):
+  # Check the XML check results
+  if not check_results_list:
+    print "Congratulations! Nothing needs to update!"
+    return
+
+  # Obtain the 
+  tree = ET.parse(xml_filename)
+
+  # Check each item that needs to be updated in XML
+  for result in check_results_list:
+    # Extract the command
+    command = result.command;    
+
+    # Extract previous field alread existing in current XML
+    previous_field_name = result.previous_field_name
+
+    # Extract field needs to be updated
+    field_name = result.field_name
+
+    # Iterate every node
+    root = tree.getroot()
+    finished = False
+    for form in root.findall("form"):
+      if finished == True:
+        break
+      for sections in form.findall("sections"):
+        if finished == True:
+          break
+        for section in sections.findall("section"):
+          if finished == True:
+            break
+          for fields in section.findall("fields"):
+            if finished == True:
+              break
+            for field in fields.findall("field"):
+              if command == "remove":
+                if field.find("fieldName").text == field_name:
+                  fields.remove(field)
+                  finished = True
+                  break
+              elif command == "add":
+                if field.find("fieldName").text == previous_field_name:
+                  field_idx = fields.getchildren().index(field) + 1
+                  fields.insert(field_idx, BuildField(field_name))
+                  finished = True
+                  break
+              elif command == "update_constraints":
+                if field.find("fieldName").text == field_name:
+                  if field.find("fieldConstraints").text == "":
+                    field.find("fieldConstraints").text =\
+                      field_dd_dict[field_name].constraints.decode('utf-8')
+                  else:
+                    print "Constraints exist, no need to update"
+                    print "Something is wrong when generate the check results"
+                    exit(1)
+              elif command == "update_branch_logic":
+                if field.find("fieldName").text == field_name:
+                  if field.find("fieldBranchLogic").text == "":
+                    field.find("fieldBranchLogic").text =\
+                      field_dd_dict[field_name].branch_logic.decode('utf-8')
+                  else:
+                    print "Branch logic exist, no need to update"
+                    print "Something is wrong when generate the check results"
+                    exit(1)
+              else:
+                print "Command NOT recognized"
+                exit(1)
+
+  # Debug code
+  #for form in root.findall("form"):
+  #  print form.find("formName").text
+  #  for sections in form.findall("sections"):
+  #    for section in sections.findall("section"):
+  #      if section.find("sectionLabelEnglish").text:
+  #        print "==>" + section.find("sectionLabelEnglish").text
+  #      else:
+  #        print "\t==> " + "UNDEFINED LABEL"
+  #      for fields in section.findall("fields"):
+  #        for field in fields.findall("field"):
+  #          print "\t==>" + field.find("fieldName").text
+
+  #exit()
+  # Write tree to xml file
+  #rough_string = ET.tostring(tree.getroot(), encoding='utf-8')
+  #reparsed = parseString(rough_string)
+
+  #fn_output_xml = open(output_xml_filename, 'w')
+  #fn_output_xml.write(reparsed.toprettyxml(indent=" ", newl="", encoding="utf-8"))
+  #fn_output_xml.close()
+  tree.write(output_xml_filename, encoding='utf-8')
 
 usage_str = "Usage: ./<script name> <path to data dictionary csv> " \
-            "<path to data dictionary xml file>"
+            "<path to data dictionary xml file> <path to new xml file>"
 
 def main():
 
-  if len(sys.argv) < 3:
+  if len(sys.argv) < 4:
     print "Too few arguments"
     print "Please specify the csv file and xml file."
     print usage_str
     sys.exit()
 
-  if len(sys.argv) > 3:
+  if len(sys.argv) > 4:
     print "Too many arguments. Read one csv file at at time."
     print usage_str
     sys.exit()
@@ -243,10 +372,12 @@ def main():
   print "program name : ", sys.argv[0]
   print "data dictionary csv file : ", sys.argv[1]
   print "data dictionary xml file : ", sys.argv[2]
+  print "Output xml file : ", sys.argv[3]
   print "Start program."
 
   csv_filename = sys.argv[1]
   xml_filename = sys.argv[2]
+  output_xml_filename = sys.argv[3]
 
   # Parse XML file
   ParseXml(xml_filename)
@@ -256,6 +387,9 @@ def main():
 
   # Check field
   CheckField()
+
+  # Update Xml
+  UpdateXml(xml_filename, output_xml_filename)
 
   # Generate check report
   GenerateReport()
