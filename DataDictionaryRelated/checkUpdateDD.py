@@ -198,13 +198,13 @@ def CheckField():
 
   # Check missing constraints
   for field in field_xml_dict:
-    if field_xml_dict[field].constraints == "" and field_dd_dict[field].constraints:
+    if (field in field_dd_dict) and (field_xml_dict[field].constraints != field_dd_dict[field].constraints):
       command = "update_constraints"
       check_results_list.append(CheckResult(field, command, ""))
 
   # Check missing branch logic
   for field in field_xml_dict:
-    if field_xml_dict[field].branch_logic == "" and field_dd_dict[field].branch_logic:
+    if (field in field_dd_dict) and (field_xml_dict[field].branch_logic != field_dd_dict[field].branch_logic):
       command = "update_branch_logic"
       check_results_list.append(CheckResult(field, command, ""))
 
@@ -308,22 +308,12 @@ def UpdateXml(xml_filename, output_xml_filename):
                   break
               elif command == "update_constraints":
                 if field.find("fieldName").text == field_name:
-                  if field.find("fieldConstraints").text == "":
-                    field.find("fieldConstraints").text =\
-                      field_dd_dict[field_name].constraints.decode('utf-8')
-                  else:
-                    print "Constraints exist, no need to update"
-                    print "Something is wrong when generate the check results"
-                    exit(1)
+                  field.find("fieldConstraints").text =\
+                    field_dd_dict[field_name].constraints.decode('utf-8')
               elif command == "update_branch_logic":
                 if field.find("fieldName").text == field_name:
-                  if field.find("fieldBranchLogic").text == "":
-                    field.find("fieldBranchLogic").text =\
-                      field_dd_dict[field_name].branch_logic.decode('utf-8')
-                  else:
-                    print "Branch logic exist, no need to update"
-                    print "Something is wrong when generate the check results"
-                    exit(1)
+                  field.find("fieldBranchingLogic").text =\
+                    field_dd_dict[field_name].branch_logic.decode('utf-8')
               else:
                 print "Command NOT recognized"
                 exit(1)
