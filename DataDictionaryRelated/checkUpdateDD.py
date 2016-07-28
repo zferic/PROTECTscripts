@@ -198,13 +198,13 @@ def CheckField():
 
   # Check missing constraints
   for field in field_xml_dict:
-    if field_xml_dict[field].constraints == "":
+    if field_xml_dict[field].constraints == "" and field_dd_dict[field].constraints:
       command = "update_constraints"
       check_results_list.append(CheckResult(field, command, ""))
 
   # Check missing branch logic
   for field in field_xml_dict:
-    if field_xml_dict[field].branch_logic == "":
+    if field_xml_dict[field].branch_logic == "" and field_dd_dict[field].branch_logic:
       command = "update_branch_logic"
       check_results_list.append(CheckResult(field, command, ""))
 
