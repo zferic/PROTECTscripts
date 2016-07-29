@@ -264,7 +264,7 @@ def CheckField():
 def GenerateReport():
   # Check the XML check results
   if not check_results_list:
-    print "Congratulations! Nothing needs to update!"
+    print "Congratulations! Nothing needs to report!"
     return
 
   print "Totally " + str(len(check_results_list)) + " fields need to be updated"

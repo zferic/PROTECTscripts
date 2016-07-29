@@ -41,8 +41,9 @@ echo "ID fields remove DONE"
 # ./checkUpdateDD.py <data dictionary file> <original xml file> <temp xml file>
 
 SCRIPT=./checkUpdateDD.py
+TEMP=temp.xml
 if [ -r $SCRIPT ]; then
-  $SCRIPT $DD_CSV $ORIGINAL_XML temp.xml
+  $SCRIPT $DD_CSV $ORIGINAL_XML $TEMP
 else
   echo "Script doesn't exist"
   exit 1
@@ -56,16 +57,20 @@ fi
 # (3) Further regularize the XML format
 #     sed -i -e "s/<\(\w\+\)\/>/<\1 \/>/g" <result xml file>
 
-rm -f $RESULT_XML
+if [ -f $TEMP]; then
+  rm -f $RESULT_XML
 
-xmllint --encode utf8 --format temp.xml > $RESULT_XML
+  xmllint --encode utf8 --format $TEMP > $RESULT_XML
 
-sed -i -e "1d" $RESULT_XML
-sed -i -e "s/<\(\w\+\)\/>/<\1 \/>/g" $RESULT_XML
+  sed -i -e "1d" $RESULT_XML
+  sed -i -e "s/<\(\w\+\)\/>/<\1 \/>/g" $RESULT_XML
 
-rm temp.xml
+  rm $TEMP
+  echo "Format finalize DONE"
+  echo "Don't forget to manually check the difference between original xml and updated one"
+fi
 
-echo "Format finalize DONE"
-echo "Don't forget to manually check the difference between original xml and updated one"
 # Don't forget to manually check the difference between original xml and
 # updated one
+
+echo "Finished"
