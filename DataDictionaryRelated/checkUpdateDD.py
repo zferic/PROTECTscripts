@@ -226,9 +226,6 @@ def CheckField():
       if (field_xml_dict[field].branch_logic == None) and (field_dd_dict[field].branch_logic == ""):
         continue
       if field_xml_dict[field].branch_logic != field_dd_dict[field].branch_logic:
-        print field
-        print field_xml_dict[field].branch_logic
-        print field_dd_dict[field].branch_logic
         command = "update_branch_logic"
         check_results_list.append(CheckResult(field, command, ""))
 
