@@ -60,6 +60,7 @@ class FieldXml:
   section = ""
   constraints = ""
   branch_logic = ""
+  choice_dict = collections.OrderedDict()
 
   def __init__(self, form, section,
                constraints, branch_logic):
@@ -67,6 +68,7 @@ class FieldXml:
     self.section = section
     self.constraints = constraints
     self.branch_logic = branch_logic
+    self.choice_dict = collections.OrderedDict()
 
 field_xml_dict = collections.OrderedDict()
 def ParseXml(xml_filename):
@@ -89,6 +91,12 @@ def ParseXml(xml_filename):
             field_xml_dict[field_name] = FieldXml(form_name, section_name,
                                                field_constraints,
                                                field_branch_logic)
+            # Record field value if there is any
+            for field_values in field.findall("fieldValues"):
+              for field_data in field_values.findall("fieldData"):
+                number = field_data.find("fieldValue").text
+                content = field_data.find("fieldValueLabelEnglish").text
+                field_xml_dict[field_name].choice_dict[number] = content
 
 class FieldDD:
 
@@ -111,7 +119,7 @@ class FieldDD:
     self.note = note
     self.constraints = constraints
     self.branch_logic = branch_logic
-    self.choice_dict = {}
+    self.choice_dict = collections.OrderedDict()
 
 regex_choice = re.compile(r"[+-]?(\d+),.*")
 field_dd_dict = collections.OrderedDict()
@@ -207,6 +215,37 @@ def CheckField():
     if (field in field_dd_dict) and (field_xml_dict[field].branch_logic != field_dd_dict[field].branch_logic):
       command = "update_branch_logic"
       check_results_list.append(CheckResult(field, command, ""))
+
+  # Check inconsistent radio items
+  for field in field_xml_dict:
+    if field in field_dd_dict:
+      if field_dd_dict[field].choice_dict and field_xml_dict[field].choice_dict:
+        for choice_value in field_dd_dict[field].choice_dict:
+          if choice_value not in field_xml_dict[field].choice_dict:
+            #print "Field name: ", field
+            #print field_dd_dict[field].choice_dict
+            #print field_xml_dict[field].choice_dict
+            #print "A"
+            command = "update_field_choice"
+            check_results_list.append(CheckResult(field, command, ""))
+            break
+        continue
+        for choice_value in field_xml_dict[field].choice_dict:
+          if choice_value not in field_dd_dict[field].choice_dict:
+            #print "Field name: ", field
+            #print field_dd_dict[field].choice_dict
+            #print field_xml_dict[field].choice_dict
+            #print "B"
+            command = "update_field_choice"
+            check_results_list.append(CheckResult(field, command, ""))
+            break
+      elif field_dd_dict[field].choice_dict and (not field_xml_dict[field].choice_dict):
+          #print "Field name: ", field
+          #print field_dd_dict[field].choice_dict
+          #print field_xml_dict[field].choice_dict
+          #print "C"
+          command = "update_field_choice"
+          check_results_list.append(CheckResult(field, command, ""))
 
 def GenerateReport():
   # Check the XML check results
@@ -310,10 +349,33 @@ def UpdateXml(xml_filename, output_xml_filename):
                 if field.find("fieldName").text == field_name:
                   field.find("fieldConstraints").text =\
                     field_dd_dict[field_name].constraints.decode('utf-8')
+                  finished = True
+                  break
               elif command == "update_branch_logic":
                 if field.find("fieldName").text == field_name:
                   field.find("fieldBranchingLogic").text =\
                     field_dd_dict[field_name].branch_logic.decode('utf-8')
+                  finished = True
+                  break
+              elif command == "update_field_choice":
+                if field.find("fieldName").text == field_name:
+                  fieldValues = field.find("fieldValues")
+                  if fieldValues:
+                    field.remove(fieldValues)
+                  # Add choice from data ditionary
+                  fieldValues = ET.SubElement(field, "fieldValues")
+                  for choice_value in field_dd_dict[field_name].choice_dict:
+                    fieldData = ET.SubElement(fieldValues, "fieldData")
+                    fieldValue = ET.SubElement(fieldData, "fieldValue")
+                    fieldValue.text = choice_value.decode('utf-8')
+                    fieldValueLabelEnglish = ET.SubElement(fieldData, "fieldValueLabelEnglish")
+                    fieldValueLabelEnglish.text = \
+                      field_dd_dict[field_name].choice_dict[choice_value].decode('utf-8')
+                    fieldValueLabelSpanish = ET.SubElement(fieldData, "fieldValueLabelSpanish")
+                    fieldValueLabelSpanish.text = \
+                      field_dd_dict[field_name].choice_dict[choice_value].decode('utf-8')
+                  finished = True
+                  break
               else:
                 print "Command NOT recognized"
                 exit(1)
