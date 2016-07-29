@@ -390,7 +390,7 @@ def UpdateXml(xml_filename, output_xml_filename):
               elif command == "update_field_choice":
                 if field.find("fieldName").text == field_name:
                   fieldValues = field.find("fieldValues")
-                  if fieldValues:
+                  if fieldValues != None:
                     field.remove(fieldValues)
                   # Add choice from data ditionary
                   fieldValues = ET.SubElement(field, "fieldValues")

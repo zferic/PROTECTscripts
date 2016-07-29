@@ -57,7 +57,7 @@ fi
 # (3) Further regularize the XML format
 #     sed -i -e "s/<\(\w\+\)\/>/<\1 \/>/g" <result xml file>
 
-if [ -f $TEMP]; then
+if [ -f $TEMP ]; then
   rm -f $RESULT_XML
 
   xmllint --encode utf8 --format $TEMP > $RESULT_XML
