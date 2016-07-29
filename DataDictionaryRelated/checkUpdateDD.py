@@ -54,6 +54,7 @@ from xml.dom.minidom import parse, parseString
 
 default_label_name = "UNLABELED"
 
+# FieldXml class
 class FieldXml:
 
   form = ""
@@ -70,6 +71,7 @@ class FieldXml:
     self.branch_logic = branch_logic
     self.choice_dict = collections.OrderedDict()
 
+# Function ParseXml
 field_xml_dict = collections.OrderedDict()
 def ParseXml(xml_filename):
   tree = ET.parse(xml_filename)
@@ -98,6 +100,7 @@ def ParseXml(xml_filename):
                 content = field_data.find("fieldValueLabelEnglish").text
                 field_xml_dict[field_name].choice_dict[number] = content
 
+# Class FieldDD
 class FieldDD:
 
   form = ""
@@ -121,6 +124,8 @@ class FieldDD:
     self.branch_logic = branch_logic
     self.choice_dict = collections.OrderedDict()
 
+
+# Function ParsDD
 regex_choice = re.compile(r"[+-]?(\d+),.*")
 field_dd_dict = collections.OrderedDict()
 def ParseDD(dd_filename):
@@ -163,6 +168,7 @@ def ParseDD(dd_filename):
         content = item.replace(number+",", "")
         field_dd_dict[field_name].choice_dict[number] = content
 
+# Class CheckResult
 class CheckResult:
   field_name = ""
   command = ""
@@ -173,6 +179,7 @@ class CheckResult:
     self.command = command
     self.previous_field_name = previous_field_name
 
+# Function CheckField
 check_results_list = []
 def CheckField():
   # If the two dictionary are empty, then return immdiately
@@ -206,15 +213,24 @@ def CheckField():
 
   # Check missing constraints
   for field in field_xml_dict:
-    if (field in field_dd_dict) and (field_xml_dict[field].constraints != field_dd_dict[field].constraints):
-      command = "update_constraints"
-      check_results_list.append(CheckResult(field, command, ""))
+    if field in field_dd_dict:
+      if (field_xml_dict[field].constraints == None) and (field_dd_dict[field].constraints == ""):
+        continue
+      if field_xml_dict[field].constraints != field_dd_dict[field].constraints:
+        command = "update_constraints"
+        check_results_list.append(CheckResult(field, command, ""))
 
   # Check missing branch logic
   for field in field_xml_dict:
-    if (field in field_dd_dict) and (field_xml_dict[field].branch_logic != field_dd_dict[field].branch_logic):
-      command = "update_branch_logic"
-      check_results_list.append(CheckResult(field, command, ""))
+    if field in field_dd_dict:
+      if (field_xml_dict[field].branch_logic == None) and (field_dd_dict[field].branch_logic == ""):
+        continue
+      if field_xml_dict[field].branch_logic != field_dd_dict[field].branch_logic:
+        print field
+        print field_xml_dict[field].branch_logic
+        print field_dd_dict[field].branch_logic
+        command = "update_branch_logic"
+        check_results_list.append(CheckResult(field, command, ""))
 
   # Check inconsistent radio items
   for field in field_xml_dict:
@@ -225,7 +241,6 @@ def CheckField():
             #print "Field name: ", field
             #print field_dd_dict[field].choice_dict
             #print field_xml_dict[field].choice_dict
-            #print "A"
             command = "update_field_choice"
             check_results_list.append(CheckResult(field, command, ""))
             break
@@ -235,7 +250,6 @@ def CheckField():
             #print "Field name: ", field
             #print field_dd_dict[field].choice_dict
             #print field_xml_dict[field].choice_dict
-            #print "B"
             command = "update_field_choice"
             check_results_list.append(CheckResult(field, command, ""))
             break
@@ -243,10 +257,10 @@ def CheckField():
           #print "Field name: ", field
           #print field_dd_dict[field].choice_dict
           #print field_xml_dict[field].choice_dict
-          #print "C"
           command = "update_field_choice"
           check_results_list.append(CheckResult(field, command, ""))
 
+# Function Generate report
 def GenerateReport():
   # Check the XML check results
   if not check_results_list:
@@ -255,12 +269,30 @@ def GenerateReport():
 
   print "Totally " + str(len(check_results_list)) + " fields need to be updated"
   # Print out the results
-  #for result in check_results_list:
-  #  print "--------------------------"
-  #  print "Field name: " + result.field_name
-  #  print "Command: " + result.command
+  add_list = []
+  remove_list = []
+  update_constraints_list = []
+  update_branch_logic_list = []
+  update_field_choice_list = []
+  for result in check_results_list:
+    if result.command == "add":
+      add_list.append(result.field_name)
+    if result.command == "remove":
+      remove_list.append(result.field_name)
+    if result.command == "update_constraints":
+      update_constraints_list.append(result.field_name) 
+    if result.command == "update_branch_logic":
+      update_branch_logic_list.append(result.field_name)
+    if result.command == "update_field_choice":
+      update_field_choice_list.append(result.field_name) 
+  print "Add number: ", len(add_list)
+  print "Remove number: ", len(remove_list)
+  print "Update constraints number: ", len(update_constraints_list)
+  print "Update branch logic number: ", len(update_branch_logic_list)
+  print "Update field choice number: ", len(update_field_choice_list)
   
 
+# Function BuildField
 def BuildField(field_name):
   # Create subelement of field
   field = ET.Element("field")
@@ -298,6 +330,7 @@ def BuildField(field_name):
 
   return field
  
+# Function UpdateXml
 def UpdateXml(xml_filename, output_xml_filename):
   # Check the XML check results
   if not check_results_list:
@@ -405,7 +438,7 @@ def UpdateXml(xml_filename, output_xml_filename):
 
 usage_str = "Usage: ./<script name> <path to data dictionary csv> " \
             "<path to data dictionary xml file> <path to new xml file>"
-
+# Function main
 def main():
 
   if len(sys.argv) < 4:

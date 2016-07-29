@@ -60,6 +60,7 @@ rm -f $RESULT_XML
 
 xmllint --encode utf8 --format temp.xml > $RESULT_XML
 
+sed -i -e "1d" $RESULT_XML
 sed -i -e "s/<\(\w\+\)\/>/<\1 \/>/g" $RESULT_XML
 
 rm temp.xml
