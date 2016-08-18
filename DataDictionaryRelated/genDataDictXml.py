@@ -175,8 +175,9 @@ def BuildXml(xml_filename):
       e_sectionLabelSpanish = ET.SubElement(e_section, "sectionLabelSpanish")
       e_sectionLabelEnglish.text = section.decode('utf-8')
       e_sectionLabelSpanish.text = section.decode('utf-8')
+      e_fields = ET.SubElement(e_section, "fields")
       for field in field_dd_dict[form][section]:
-        BuildField(e_section, form, section, field)
+        BuildField(e_fields, form, section, field)
 
   rough_string = ET.tostring(e_root, encoding='utf-8')
   fn_output_xml = open(xml_filename, 'w')
