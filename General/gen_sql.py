@@ -75,8 +75,8 @@ start_string = \
 "\n"\
 "SYS_LOC_CODE NVARCHAR(20) NOT NULL,\n"\
 "\n"\
-"REDCAP_EVENT_NAME NVARCHAR(100) NULL,\n"\
-"\n"\
+#"REDCAP_EVENT_NAME NVARCHAR(100) NULL,\n"\
+#"\n"\
 
 end_string = \
 "EBATCH EBATCH NULL,\n"\
@@ -162,6 +162,9 @@ def GenTemplate(info):
     # number
     index_number = field_valid.find('number')
 
+    # decimal
+    index_decimal = field_valid.find('decimal')
+
     # string
     n = 0
     if (index_date > -1):
@@ -175,6 +178,8 @@ def GenTemplate(info):
         n = 4
       else:
         n = 3
+    elif (index_decimal > -1):
+      n = 5
 
     if n == 1:
       FType = "DATE"
@@ -185,7 +190,7 @@ def GenTemplate(info):
     elif n == 3:
       FType = "INT"
 
-    elif n == 4:
+    elif n == 4 or n == 5:
       FType = "DECIMAL(8, 4)"
 
     else:
@@ -293,8 +298,8 @@ def GenTemplate(info):
 
   return format_string
 
-usage_str = "Usage: ./[script name] [path to data dictionary csv] " \
-            "[target table]"
+usage_str = "[Usage]: ./<script name> <path to data dictionary csv> " \
+            "<target table>"
 
 def main():
 

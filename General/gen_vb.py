@@ -333,8 +333,8 @@ error_msg_str = ""
 check_func_str = ""
 custom_check_str = ""
 grid_event_str = ""
-usage_str = "Usage: ./[script name] [path to data dictionary csv] " \
-            "[target table]"
+usage_str = "[Usage]: ./<script name> <path to data dictionary csv> " \
+            "<target table>"
 
 def main():
 

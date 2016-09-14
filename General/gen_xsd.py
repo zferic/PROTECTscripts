@@ -245,6 +245,9 @@ def GenDefInfo(info):
     # number
     index_number = field_valid.find('number')
 
+    # decimal
+    index_decimal = field_valid.find('decimal')
+
     # string
     n = 0
 
@@ -256,6 +259,8 @@ def GenDefInfo(info):
       n = 3
     elif index_number > -1:
       n = 4
+    elif index_decimal > -1:
+      n = 5
 
     
     field_min = field_min.strip()
@@ -278,7 +283,7 @@ def GenDefInfo(info):
         format_string = Format_Int_Range.replace('_elename_', field_name)
         format_string = format_string.replace('_min_', field_min)
         format_string = format_string.replace('_max_', field_max)
-    elif n == 4:
+    elif n == 4 or n == 5:
       field_min = field_min.strip()
       field_max = field_max.strip()
       if len(field_min) == 0 and len(field_max) == 0:
@@ -319,8 +324,8 @@ def GenDefInfo(info):
   return format_string
 
 
-usage_string = "[Usage] ./[script_name] [dd csv file] [target table] [command]\n"\
-               "The [command] is optional and has two choice 1) map 2) def"
+usage_string = "[Usage] ./<script_name> <dd csv file> <target table> <command>\n"\
+               "The <command> is optional and has two choice 1) map 2) def"
 
 def main():
 
