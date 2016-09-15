@@ -154,8 +154,8 @@ Format_Decimal_Range = \
 indent_p2 + "<xs:element name=\"_elename_\" nillable=\"true\">\n" + \
 indent_p2 + "\t<xs:simpleType>\n" + \
 indent_p2 + "\t\t<xs:restriction base=\"xs:decimal\">\n" + \
-indent_p2 + "\t\t\t<xs:totalDigits value=\"8\" />\n" + \
-indent_p2 + "\t\t\t<xs:fractionDigits value=\"4\" />\n" + \
+indent_p2 + "\t\t\t<xs:totalDigits value=\"16\" />\n" + \
+indent_p2 + "\t\t\t<xs:fractionDigits value=\"8\" />\n" + \
 indent_p2 + "\t\t\t<xs:minInclusive value=\"_min_\"/>\n" + \
 indent_p2 + "\t\t\t<xs:maxInclusive value=\"_max_\"/>\n" + \
 indent_p2 + "\t\t</xs:restriction>\n" + \
@@ -176,7 +176,7 @@ indent_p2 + "</xs:element>\n"
 # the first column is the data field
 # to generate the xml format, we need to know
 # 1) data type  2) data range
-def GenMappingInfo(info):
+def GenMappingInfo(info, first_field_processed):
   format_string = ""
 
   ## extract related fields
@@ -192,7 +192,10 @@ def GenMappingInfo(info):
   name_upp = name_upp.strip()
 
   format_string = mapping_string.replace('small_name', name_low)
-  format_string = format_string.replace('cap_name', name_upp)
+  if not first_field_processed:
+    format_string = format_string.replace('cap_name', 'SYS_LOC_CODE')
+  else:
+    format_string = format_string.replace('cap_name', name_upp)
 
   return format_string
 
@@ -367,12 +370,16 @@ def main():
   # You can specify which table to work on !!!
   mapping_info = ""
   definition_info = ""
+  first_field_processed = False
   for row in file:
     tablename = row[1]
     tablename = tablename.strip()
     if tablename == target_table:
       # Gen mapping info
-      mapping_info += GenMappingInfo(row)
+      mapping_info += GenMappingInfo(row, first_field_processed)
+      # In SQL file, the first field should be mapped to SYS_LOC_CODE
+      if not first_field_processed:
+        first_field_processed = True
       # Gen definition info
       definition_info += GenDefInfo(row)
 

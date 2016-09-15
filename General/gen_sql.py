@@ -73,8 +73,8 @@ start_string = \
 "\n"\
 "FACILITY_ID INT NOT NULL,\n"\
 "\n"\
-"SYS_LOC_CODE NVARCHAR(20) NOT NULL,\n"\
-"\n"\
+#"SYS_LOC_CODE NVARCHAR(20) NOT NULL,\n"\
+#"\n"\
 #"REDCAP_EVENT_NAME NVARCHAR(100) NULL,\n"\
 #"\n"\
 
@@ -109,7 +109,7 @@ regex_decimal = re.compile(r"\d+\.\d+")
 # the first column is the data field
 # to generate the xml format, we need to know
 # 1) data type  2) data range
-def GenTemplate(info):
+def GenTemplate(info, first_field_processed):
   format_string = ""
   null_str = "NULL"
   condstr = ""
@@ -131,7 +131,10 @@ def GenTemplate(info):
   target_table = info[1]
 
   # (1) change to upper case
-  field_name = field_name.strip().upper()
+  if not first_field_processed:
+    field_name = 'SYS_LOC_CODE'
+  else:
+    field_name = field_name.strip().upper()
 
   # (2) determine the data type
   FType = ""
@@ -191,7 +194,8 @@ def GenTemplate(info):
       FType = "INT"
 
     elif n == 4 or n == 5:
-      FType = "DECIMAL(8, 4)"
+      #FType = "DECIMAL(8, 4)"
+      FType = "DECIMAL(16, 8)"
 
     else:
       if char_limit:
@@ -337,12 +341,16 @@ def main():
   global end_string
   start_string = start_string.replace("target_table", target_table)
   o_file.write(start_string)
+  first_field_processed = False
   for row in file:
     tablename = row[1].strip()
     if tablename == target_table:
 
-      row_temp = GenTemplate(row)
+      row_temp = GenTemplate(row, first_field_processed)
 
+      # In SQL file, the first field should be mapped to SYS_LOC_CODE
+      if not first_field_processed:
+        first_field_processed = True
       # output the row_temp to the text file
       o_file.write(row_temp)
       o_file.write("\n")
