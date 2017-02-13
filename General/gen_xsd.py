@@ -144,8 +144,8 @@ Format_Decimal = \
 indent_p2 + "<xs:element name=\"_elename_\" nillable=\"true\">\n" + \
 indent_p2 + "\t<xs:simpleType>\n" + \
 indent_p2 + "\t\t<xs:restriction base=\"xs:decimal\">\n" + \
-indent_p2 + "\t\t\t<xs:totalDigits value=\"8\" />\n" + \
-indent_p2 + "\t\t\t<xs:fractionDigits value=\"4\" />\n" + \
+indent_p2 + "\t\t\t<xs:totalDigits value=\"16\" />\n" + \
+indent_p2 + "\t\t\t<xs:fractionDigits value=\"8\" />\n" + \
 indent_p2 + "\t\t</xs:restriction>\n" + \
 indent_p2 + "\t</xs:simpleType>\n" + \
 indent_p2 + "</xs:element>\n"
