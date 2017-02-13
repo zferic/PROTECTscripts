@@ -93,13 +93,44 @@ def Update(original_csv_file, ref_csv_file):
         break
     updatedfile.writerow(row)
 
+def Refine(csv_file):
+  readfile = csv.reader(open(csv_file, "rb"))
+  writefile = csv.writer(open(csv_file.split('.')[0]+"_refined.csv", "wb"))
+
+  # Hard coded fields selection
+  field_idx = 0
+  form_idx = 1
+  type_idx = 3
+  choice_idx = 5
+  validation_type_idx = 7
+  min_idx = 8
+  max_idx = 9
+  branch_logic_idx = 11
+  idx_list = [field_idx, form_idx, type_idx, choice_idx, validation_type_idx,
+              min_idx, max_idx, branch_logic_idx]
+
+  # write header
+  header = next(readfile)
+  refined_header = []
+  for idx in idx_list:
+    refined_header.append(header[idx])
+  writefile.writerow(refined_header)
+
+  # Write extracted row to new csv file
+  for row in readfile:
+    refined_row = []
+    for idx in idx_list:
+      refined_row.append(row[idx])   
+    writefile.writerow(refined_row)
+
 
 usage_str = "./[path to scripts] extract [path to csv file] [targe table]\n" \
             "./[path to scripts] update [path to original csv file] " \
-            "[path to reference csv file]\n"
+            "[path to reference csv file]\n" \
+            "./[path to scripts] refine [path to original csv file]\n" \
 
 def main():
-  if len(sys.argv) < 4:
+  if len(sys.argv) < 3:
     print "Too few arguments"
     print "Please specify the csv file and target."
     print usage_str
@@ -130,6 +161,12 @@ def main():
     originalfilename = sys.argv[2]
     referencefilename = sys.argv[3]
     Update(originalfilename, referencefilename)
+  elif command == "refine":
+    print "original csv file : ", sys.argv[2]
+    print "Start program."
+
+    originalfilename = sys.argv[2]
+    Refine(originalfilename)
   else:
     print "Unsupported command"
     exit()
