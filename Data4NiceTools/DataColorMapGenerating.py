@@ -61,8 +61,16 @@ def GenerateColorMap(raw_data_filename):
 
   cmap = ListedColormap(['black', 'red', 'blue'])
   plt.pcolormesh(color_array, cmap=cmap)
-  plt.show()
+  #plt.imshow(color_array, cmap=cmap)
+  plt.xlabel('Fields')
+  plt.ylabel('Samples/Participants')
+  plt.title('Color map of product use data')
   
+  plt.grid()
+  #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+  #           ncol=3, mode="expand", borderaxespad=0.)
+  plt.tight_layout()
+  plt.savefig('data_color_map.png', format='png', bbox_inches='tight') 
 
 def main():
   print ("Start program.")
