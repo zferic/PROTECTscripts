@@ -109,11 +109,12 @@ regex_decimal = re.compile(r"\d+\.\d+")
 # the first column is the data field
 # to generate the xml format, we need to know
 # 1) data type  2) data range
+
 def GenTemplate(info, first_field_processed):
   format_string = ""
   null_str = "NULL"
   condstr = ""
-
+  print(info[0])
   ## extract related fields
   ## branching logic is not considered here
   field_name     = info[0]        # name
@@ -248,7 +249,8 @@ def GenTemplate(info, first_field_processed):
     for item in sepintlist:
       # extract the 1st integer in each item
       found_int = re.search("\d+", item)
-      list_int.append(found_int.group())
+      if found_int:
+        list_int.append(found_int.group())
 
     pipe_int = ""
     for items in list_int:
@@ -302,35 +304,35 @@ def GenTemplate(info, first_field_processed):
 
   return format_string
 
-usage_str = "[Usage]: ./<script name> <path to data dictionary csv> " \
-            "<target table>"
+usage_str = ("[Usage]: ./<script name> <path to data dictionary csv> " \
+            "<target table>")
 
 def main():
 
   if len(sys.argv) < 3:
-    print "Too few arguments"
-    print "Please specify the csv file and target."
-    print usage_str
+    print ("Too few arguments")
+    print ("Please specify the csv file and target.")
+    print (usage_str)
     sys.exit()
 
   if len(sys.argv) > 3:
-    print "Too many. Read one csv file at at time."
-    print usage_str
+    print ("Too many. Read one csv file at at time.")
+    print (usage_str)
     sys.exit()
 
   # check the arguments
   # print 'Number of arguments:', len(sys.argv), 'arguments.'
-  print "program name : ", sys.argv[0]
-  print "csv file : ", sys.argv[1]
-  print "target table : ", sys.argv[2], "This has to be correct"
-  print "Start program."
+  print ("program name : ", sys.argv[0])
+  print ("csv file : ", sys.argv[1])
+  print ("target table : ", sys.argv[2], "This has to be correct")
+  print ("Start program.")
 
   filename = sys.argv[1]
   target_table = sys.argv[2]
 
   # read csv file
-  file = csv.reader(open(filename, "rb"));
-
+  file2 = open(filename, "r");
+  file = csv.reader(file2);
   # open text file to write
   o_fname = target_table + ".sql"
   o_file = open(o_fname, "w")
@@ -342,10 +344,16 @@ def main():
   start_string = start_string.replace("target_table", target_table)
   o_file.write(start_string)
   first_field_processed = False
+  
   for row in file:
+    
     tablename = row[1].strip()
+    print('row[1[.strop()', row[1].strip())
+    print('tablename ', tablename)
+    
     if tablename == target_table:
-
+      
+      
       row_temp = GenTemplate(row, first_field_processed)
 
       # In SQL file, the first field should be mapped to SYS_LOC_CODE
@@ -360,11 +368,11 @@ def main():
   o_file.close()
 
   #
-  print "End program.\n",\
+  print ("End program.\n",\
     "The decimal cases are only handled when there are obvious "\
     "decimal number in the data dictionary.\n"\
     "Most of the case are not considered here.\n",\
-    "You still need to manually fix the output."
+    "You still need to manually fix the output.")
 
   return 0
 
@@ -372,5 +380,4 @@ def main():
 
 if __name__ == '__main__':
   main()
-
 
