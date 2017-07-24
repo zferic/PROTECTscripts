@@ -182,7 +182,7 @@ def GenMappingInfo(info, first_field_processed):
   ## extract related fields
   ## branching logic is not considered here
   field_name     = info[0]        # name
-
+  print("in mapping info");
   # change to lower case
   name_low = field_name.strip().lower()
   name_upp = field_name.strip().upper()
@@ -311,7 +311,8 @@ def GenDefInfo(info):
     for item in sepintlist:
       # extract the 1st integer in each item
       found_int = re.search("\d+", item)
-      list_int.append(found_int.group())
+      if found_int:
+        list_int.append(found_int.group())
 
     #print list_int
     format_str1 = Format_Int_Enum_part1.replace('_elename_', field_name)
@@ -333,13 +334,13 @@ usage_string = "[Usage] ./<script_name> <dd csv file> <target table> <command>\n
 def main():
 
   if len(sys.argv) < 3:
-    print "Too few argument"
-    print usage_string
+    print ("Too few argument")
+    print (usage_string)
     sys.exit()
 
   if len(sys.argv) > 4:
-    print "Too many. Read one csv file at at time."
-    print usage_string
+    print ("Too many. Read one csv file at at time.")
+    print (usage_string)
     sys.exit()
 
   command = ""
@@ -348,19 +349,20 @@ def main():
 
   # check the arguments
   # print 'Number of arguments:', len(sys.argv), 'arguments.'
-  print "program name : ", sys.argv[0]
-  print "csv dd file : ", sys.argv[1]
-  print "target table : ", sys.argv[2]
+  print ("program name : ", sys.argv[0])
+  print ("csv dd file : ", sys.argv[1])
+  print ("target table : ", sys.argv[2])
   if command:
-    print "command : ", command
-  print "Start program."
+    print ("command : ", command)
+  print ("Start program.")
 
 
   filename = sys.argv[1]
   target_table = sys.argv[2]
 
   # read csv file
-  file = csv.reader(open(filename, "rb"));
+  file2 = open(filename, "r");
+  file = csv.reader(file2);
 
   # open text file to write
   o_fname = target_table + command + ".xsd"
@@ -372,11 +374,14 @@ def main():
   definition_info = ""
   first_field_processed = False
   for row in file:
+    
     tablename = row[1]
     tablename = tablename.strip()
+    target_table = tablename
     if tablename == target_table:
       # Gen mapping info
       mapping_info += GenMappingInfo(row, first_field_processed)
+      
       # In SQL file, the first field should be mapped to SYS_LOC_CODE
       if not first_field_processed:
         first_field_processed = True
@@ -397,16 +402,16 @@ def main():
     elif command == "def":
       o_file.write(definition_info)
     else:
-      print "Illigel command: ", command
+      print ("Illigel command: ", command)
       sys.exit()
 
   # close output file
   o_file.close()
 
   #
-  print "End program.\n",\
+  print ("End program.\n",\
     "The decimal case is only partially considered here.\n",\
-    "You still need to manually fix some output."
+    "You still need to manually fix some output.")
 
   return 0
 

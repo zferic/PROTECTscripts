@@ -258,6 +258,7 @@ def GenConditionInfo(info):
       choice_str = choice_str[:-4]
 
     # Set the condition field dictionary
+    
     if condition not in condition_info_dict:
       condition_info_dict[condition] = []
       condition_info_dict[condition].append(ConditionInfo(condition_number, \
@@ -344,28 +345,29 @@ def main():
   global grid_event_str
 
   if len(sys.argv) < 3:
-    print "Too few arguments"
-    print "Please specify the csv file and target."
-    print usage_str
+    print ("Too few arguments")
+    print ("Please specify the csv file and target.")
+    print (usage_str)
     sys.exit()
 
   if len(sys.argv) > 3:
-    print "Too many. Read one csv file at at time."
-    print usage_str
+    print ("Too many. Read one csv file at at time.")
+    print (usage_str)
     sys.exit()
 
   # check the arguments
   # print 'Number of arguments:', len(sys.argv), 'arguments.'
-  print "program name : ", sys.argv[0]
-  print "csv file : ", sys.argv[1]
-  print "target table : ", sys.argv[2], "This has to be correct"
-  print "Start program."
+  print ("program name : ", sys.argv[0])
+  print ("csv file : ", sys.argv[1])
+  print ("target table : ", sys.argv[2], "This has to be correct")
+  print ("Start program.")
 
   filename = sys.argv[1]
   target_table = sys.argv[2]
 
   # read csv file
-  file = csv.reader(open(filename, "rb"));
+  file2 = open(filename, "r");
+  file = csv.reader(file2);
 
   # open text file to write
   error_msg_fname = target_table + "_error_msg.txt"
@@ -381,6 +383,7 @@ def main():
   # You can specify which table to work on !!!
   for row in file:
     tablename = row[1].strip()
+    target_table = tablename
     if tablename == target_table:
       GenConditionInfo(row)
 
@@ -427,7 +430,7 @@ def main():
   grid_event_file.close()
 
   # Program ends
-  print "End program.\n"
+  print ("End program.\n")
 
   return 0
 
