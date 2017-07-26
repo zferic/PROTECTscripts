@@ -383,7 +383,7 @@ def main():
   # You can specify which table to work on !!!
   for row in file:
     tablename = row[1].strip()
-    target_table = tablename
+    
     if tablename == target_table:
       GenConditionInfo(row)
 

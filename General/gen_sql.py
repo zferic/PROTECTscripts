@@ -48,7 +48,7 @@ import csv
 import re
 
 #modify the field types if necessary
-FieldType = ['text','radio','notes', 'checkbox']
+FieldType = ['text','radio','notes', 'checkbox','dropdown']
 target_table = ""
 
 # for each field type, there could be multiple specific types
@@ -127,7 +127,14 @@ def GenTemplate(info, first_field_processed):
   field_branch   = info[11]
   minv = field_min.strip()                                                      
   maxv = field_max.strip()
-
+  
+  #initialize case variables to be used later
+  index_date = -1
+  index_time = -1
+  index_int = -1
+  index_number = -1
+  index_decimal = -1
+  
   # target table name
   target_table = info[1]
 
@@ -150,7 +157,7 @@ def GenTemplate(info, first_field_processed):
     else:
       FType = "NVARCHAR(200)"
 
-  if(field_type == 'radio' or field_type == 'checkbox'):
+  if(field_type == 'radio' or field_type == 'checkbox' or field_type =='dropdown'):
     FType = "INT"
 
   if(field_type == 'text'):
@@ -348,8 +355,7 @@ def main():
   for row in file:
     
     tablename = row[1].strip()
-    print('row[1[.strop()', row[1].strip())
-    print('tablename ', tablename)
+    
     
     if tablename == target_table:
       
