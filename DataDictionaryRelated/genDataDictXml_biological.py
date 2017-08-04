@@ -85,6 +85,7 @@ def ParseDD(dd_filename):
   form_name = ""
   header = next(dd_file)
   for row in dd_file:
+    
     field_name = row[0]
     if form_name != row[1]:
       form_name = row[1]
@@ -125,12 +126,18 @@ def ParseDD(dd_filename):
 # Function BuildField
 def BuildField(element, form_name, section_name, field_name):
   # Create subelement of field
+  print('***************************')
+  print(field_dd_dict[form_name][section_name][field_name].label)
+  print(field_dd_dict[form_name][section_name][field_name].data_type)
+  print(field_dd_dict[form_name][section_name][field_name].note)
+  print(field_dd_dict[form_name][section_name][field_name].constraints)
   field = ET.SubElement(element, "field")
   fieldName = ET.SubElement(field, "fieldName")
   fieldName.text = field_name
   fieldLabelSpanish = ET.SubElement(field, "fieldLabelSpanish")
   fieldLabelEnglish = ET.SubElement(field, "fieldLabelEnglish")
   fieldLabelSpanish.text = field_dd_dict[form_name][section_name][field_name].label
+  
   fieldLabelEnglish.text = field_dd_dict[form_name][section_name][field_name].label
   fieldType = ET.SubElement(field, "fieldType")
   fieldType.text = field_dd_dict[form_name][section_name][field_name].data_type
@@ -150,7 +157,9 @@ def BuildField(element, form_name, section_name, field_name):
     for choice_value in field_dd_dict[form_name][section_name][field_name].choice_dict:
       fieldData = ET.SubElement(fieldValues, "fieldData")
       fieldValue = ET.SubElement(fieldData, "fieldValue")
-      fieldValue.text = choice_value
+      fieldValue.text = \
+        field_dd_dict[form_name][section_name][field_name].choice_dict[choice_value]
+      
       fieldValueLabelEnglish = ET.SubElement(fieldData, "fieldValueLabelEnglish")
       fieldValueLabelEnglish.text = \
         field_dd_dict[form_name][section_name][field_name].choice_dict[choice_value]
@@ -178,6 +187,7 @@ def BuildXml(xml_filename):
       e_sectionLabelSpanish.text = section
       e_fields = ET.SubElement(e_section, "fields")
       for field in field_dd_dict[form][section]:
+        print(field)
         BuildField(e_fields, form, section, field)
 
   rough_string = ET.tostring(e_root, encoding='utf-8')
