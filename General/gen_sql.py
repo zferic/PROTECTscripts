@@ -176,6 +176,12 @@ def GenTemplate(info, first_field_processed):
     # decimal
     index_decimal = field_valid.find('decimal')
 
+     # number
+    index_number_1dp = field_valid.find('number_1dp')
+    #number
+    index_number_2dp = field_valid.find('number_2dp')
+
+
     # string
     n = 0
     if (index_date > -1):
@@ -185,10 +191,15 @@ def GenTemplate(info, first_field_processed):
     elif (index_int > -1):
       n = 3
     elif (index_number > -1):
-      if regex_decimal.match(minv) or regex_decimal.match(maxv):
-        n = 4
+      # more specific checks so 'number_1dp' / 'number_2dp' don't get swallowed by 'number'
+      if re.search(r'\bnumber_2dp\b', field_valid, re.I):
+        n = 7           # your existing mapping for number_2dp
+      elif re.search(r'\bnumber_1dp\b', field_valid, re.I):
+        n = 6           # your existing mapping for number_1dp
+      elif regex_decimal.match(minv) or regex_decimal.match(maxv):
+        n = 4           # generic number with decimal min/max -> decimal
       else:
-        n = 3
+        n = 3           # plain number -> int
     elif (index_decimal > -1):
       n = 5
 
@@ -204,6 +215,10 @@ def GenTemplate(info, first_field_processed):
     elif n == 4 or n == 5:
       #FType = "DECIMAL(8, 4)"
       FType = "DECIMAL(16, 8)"
+    elif n == 6:
+      FType = "DECIMAL(16, 1)"
+    elif n == 7:
+      FType = "DECIMAL(16, 2)"
 
     else:
       if char_limit:
@@ -353,11 +368,19 @@ def main():
   first_field_processed = False
   
   for row in file:
+
+    print(row)
     
     tablename = row[1].strip()
+
+    if row[3].strip().lower() == 'descriptive':
+      continue
     
-    
+    print(tablename)
+    print(target_table)
     if tablename == target_table:
+
+      print("Processing field: ", row[0])
       
       
       row_temp = GenTemplate(row, first_field_processed)

@@ -301,7 +301,7 @@ def GenDefInfo(info):
 
   # radio and checkbox :
   #                   multiple choices format
-  if(field_type == 'radio' or field_type == 'checkbox' or field_type == 'dropdown'):
+  if(field_type == 'radio' or field_type == 'checkbox' or field_type == 'dropdown' or field_type == 'yesno'):
     # integer list
     list_int = []
 
@@ -377,6 +377,9 @@ def main():
     
     tablename = row[1]
     tablename = tablename.strip()
+
+    if row[3].strip().lower() == 'descriptive':
+      continue
     
     if tablename == target_table:
       # Gen mapping info

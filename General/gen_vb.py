@@ -234,6 +234,7 @@ def GenConditionInfo(info):
 
   # check "|" symbol
   sym_index = field_choices.find("|")
+  print("Field Choices:", field_choices)
 
   # Branch logic and choice check
   condition = ""
@@ -252,6 +253,7 @@ def GenConditionInfo(info):
       seplist = field_choices.split('|')
       for item in seplist:
         # extract the 1st integer in each item
+        print(item)
         found_int = re.search("\d+", item)
         choice_str += "content = " + found_int.group() + " Or "
       choice_included = True
@@ -385,7 +387,12 @@ def main():
     tablename = row[1].strip()
     
     if tablename == target_table:
+      print("Match found")
       GenConditionInfo(row)
+    else:
+      print("No match")
+      print(tablename)
+      print(target_table)
 
   # Generate error msg string
   error_no = 1

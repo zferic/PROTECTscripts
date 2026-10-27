@@ -11,10 +11,10 @@ import re
 import csv
 
 if len(sys.argv) < 3:
-  print "No input files to check"
-  print "Usage: ./[script] [path to original html report file] " \
-        "[path to export file]"
-  print "Two file will be generated, further comparison is needed"
+  print ("No input files to check")
+  print ("Usage: ./[script] [path to original html report file] " \
+        "[path to export file]")
+  print ("Two file will be generated, further comparison is needed")
   exit()
 
 regex_line_number = re.compile(r"^<td align='right'> (\d+) <\/td>.*")

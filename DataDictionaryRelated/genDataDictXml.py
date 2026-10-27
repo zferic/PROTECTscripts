@@ -180,11 +180,10 @@ def BuildXml(xml_filename):
       for field in field_dd_dict[form][section]:
         BuildField(e_fields, form, section, field)
 
-  rough_string = ET.tostring(e_root, encoding='utf-8')
-  print(rough_string)
-  fn_output_xml = open(xml_filename, 'w')
-  fn_output_xml.write(str(rough_string))
-  fn_output_xml.close()
+  tree = ET.ElementTree(e_root)
+  ET.indent(tree)
+  tree.write(xml_filename, encoding='unicode', xml_declaration=True)
+
 
 usage_str = "Usage: ./<script name> <path to data dictionary csv> " \
             "<path to new xml file>"
